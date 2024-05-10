@@ -1,0 +1,5 @@
+Use Constants to store db name, links and constants
+
+Model
+View
+Service
