@@ -29,16 +29,35 @@ class DatabaseService:
         )""")
 
     def insert_film(self, film: Film):
-        self.cursor.execute(f"""
-                INSERT INTO {self.table_name} 
-                (movie_id, title, description, poster_path, backdrop_path, release_date, movie_genres, movie_cast)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (film.get_movie_id(), film.get_title(), film.get_description(),
-              film.get_poster_path(), film.get_backdrop_path(), film.get_release_date(),
-              json.dumps(film.get_movie_genres())),
-              json.dumps([cast.__dict__ for cast in film.get_movie_cast()])
-                            )
-        self.commit()
+        existing_film = self.read_film_by_id(film.get_movie_id())
+        if existing_film is None:
+            self.cursor.execute(f"""
+                    INSERT INTO {self.table_name} 
+                    (movie_id, title, description, poster_path, backdrop_path, release_date, movie_cast, movie_genres)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (film.get_movie_id(), film.get_title(), film.get_description(),
+                  film.get_poster_path(), film.get_backdrop_path(), film.get_release_date(),
+                  json.dumps([cast.__dict__ for cast in film.get_movie_cast()]),
+                  json.dumps(film.get_movie_genres())))
+            self.commit()
+            # print("Film inserted successfully.")
+        # else:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def read_films(self):
         self.cursor.execute(f"SELECT * FROM {self.table_name}")
@@ -57,7 +76,7 @@ class DatabaseService:
         return None
 
     @staticmethod
-    def _parse_film_data(self, film_data):
+    def _parse_film_data(film_data):
         # Assuming the schema matches the Film class attributes
         movie_id, title, description, poster_path, backdrop_path, release_date, movie_cast_json, movie_genres_json = film_data
         movie_cast = [Cast(**cast_data) for cast_data in json.loads(movie_cast_json)]
