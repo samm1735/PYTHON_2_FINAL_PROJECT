@@ -1,5 +1,6 @@
 
 class Constants:
+    # API
     tmdb_original_files_link = "https://www.themoviedb.org/t/p/original"
     tmdb_api_base_url = "https://api.themoviedb.org/3/movie/"
 
@@ -10,3 +11,7 @@ class Constants:
         "accept": "application/json",
         "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3MmEzMDQ0ODk5ZmI2ODU3NGExNDVmOTNmYjE3YzNiNyIsInN1YiI6IjY0YTQzNjRmZTlkYTY5MDEwMTQ3YThiMiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.LKNY8xyrlSN1Wlxw1fdZZ7yWTI0PmAhAVVrl6no_3HA"
     }
+
+    # Database
+
+    DB_NAME = "films.db"
