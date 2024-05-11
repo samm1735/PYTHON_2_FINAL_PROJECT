@@ -2,7 +2,6 @@
 import json
 import sqlite3
 
-
 from Cast import Cast
 from Constants import Constants
 from Film import Film
@@ -42,22 +41,6 @@ class DatabaseService:
             self.commit()
             # print("Film inserted successfully.")
         # else:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def read_films(self):
         self.cursor.execute(f"SELECT * FROM {self.table_name}")

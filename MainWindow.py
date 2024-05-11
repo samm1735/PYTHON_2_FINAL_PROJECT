@@ -1,36 +1,135 @@
+import tkinter as tk
+from tkinter import ttk, messagebox, PhotoImage
+
+from FilmDetailsWindow import FilmDetailsWindow
+
+from DatabaseService import DatabaseService
+from FilmServices import FilmServices
+from IsInternetConnected import is_online  # Pour tester si l'utilisateur est online ou pas
+
+color_primary = "#cccccc"
 
 
 class MainWindow:
-    pass
+    def __init__(self, root, database_service: DatabaseService, film_services: FilmServices):
+        self.root = root
+        self.root.title("Popular Movies Today")
 
+        self._database_service = database_service
+        self._film_services = film_services
+        #  ----------------
 
+        self.root.resizable(width=False, height=False)
+        self.root.state("zoomed")
 
-# import tkinter as tk
-# from tkinter import ttk
-#
-# root = tk.Tk()
-#
-# style_1 = ttk.Style()
-# buttons_style = ttk.Style()
-# style_1.configure("Custom.TFrame", background="darkblue", width=100, height=400)
-# buttons_style.configure("Custom.TButton", background="#282828", foreground="#FFFFFF", highlightbackground="#1E90FF",
-#                         highlightthickness=1)
-#
-# frame_1 = ttk.Frame(root, width=100, height=400, style="Custom.TFrame")
-# label_1 = ttk.Label(frame_1, text="HOLALA", width=100)
-# button_1 = ttk.Button(frame_1, text="Click me", style="Custom.TButton")
-#
-#
-# def say_hello():
-#     print("Hello")
-#
-#
-# label_1.pack()
-# button_1.pack()
-# frame_1.pack()
-#
-# root.resizable(False, False)
-# root.state("zoomed")
-# root.mainloop()
-#
-# print(style_1.theme_names())
+        #  ----------------
+
+        self.main_frame = tk.Frame(self.root, bg=color_primary)
+        self.main_frame.grid(row=0, column=0, padx=5, pady=10, sticky="nsew")
+
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
+
+        self.frame_title = ttk.Label(self.main_frame, text="Popular Movies Today", font=("Helvetica", 24, "bold"), background=color_primary)
+        self.frame_title.grid(row=0, column=1, sticky="ew", pady=10)
+
+        self.main_frame.grid_columnconfigure(0, weight=1)
+        self.main_frame.grid_columnconfigure(1, weight=0)
+        self.main_frame.grid_columnconfigure(2, weight=1)
+
+        #  ----------------
+
+        self.tree_view = ttk.Treeview(self.main_frame)
+        self.tree_view.grid(row=2, column=0, columnspan=3, sticky="nsew", padx=10, pady=5)
+
+        self.tree_view.config(columns=["MOVIE_ID", "IMAGE", "TITRE", "DATE DE SORTIE"])
+
+        for col in self.tree_view["columns"]:
+            self.tree_view.column(column=col, anchor=tk.W, width=120, minwidth=80)
+            self.tree_view.heading(col, text=col, anchor=tk.W)
+
+        # self.tree_view.column("ID", width=50, minwidth=50)
+        # self.tree_view.column("Age", width=50, minwidth=50)
+        self.tree_view.column("#0", width=0, minwidth=0, stretch=tk.NO)
+        # La colonne movie_id stocke l'id du film pour la navigation vers l'autre fenêtre
+        self.tree_view.column("MOVIE_ID", width=0, minwidth=0, stretch=tk.NO)  # On a pas besoin de l'afficher
+        self.tree_view.column("IMAGE", width=500, minwidth=500, stretch=tk.NO)
+        self.tree_view.column("TITRE", width=400, minwidth=350, stretch=tk.NO)
+        self.tree_view.column("DATE DE SORTIE", width=100, minwidth=80, stretch=tk.NO)
+
+        self.tree_view.bind('<Double-1>', self.on_treeview_double_click)
+
+        self.main_frame.grid_rowconfigure(2, weight=1)
+        self.main_frame.grid_columnconfigure(0, weight=1)
+
+        if not is_online():
+            self.network_status = ttk.Label(self.main_frame, text="Offline", foreground="red",
+                                            font=("Helvetica", 20),
+                                            background=color_primary
+                                            )
+            self.network_status.grid(row=1, column=0, sticky="w")
+
+            # Get data from db
+
+            self.populate_tree_view_if_offline()
+
+        else:
+            self.network_status = ttk.Label(self.main_frame, text="Online", foreground="green",
+                                            font=("Helvetica", 20)
+                                            )
+            self.network_status.grid(row=1, column=0, sticky="w")
+
+            # Get data from internet
+
+            self.populate_tree_view_if_online()
+
+    def populate_tree_view_if_offline(self):  # If user is offline
+        self.clean_tree_view()
+        for film in self._database_service.read_films():
+            # poster_image = PhotoImage(file=film.get_poster_path())
+            # Si offline, pas d'image
+            self.tree_view.insert("", tk.END, values=(
+                film.get_movie_id(), film.get_poster_path(), film.get_title(), film.get_release_date()))
+
+    def populate_tree_view_if_online(self):  # If user is offline
+        self.clean_tree_view()
+
+        for film in self._film_services.get_movie_details():
+            # poster_image = PhotoImage(file=film.get_poster_path())
+            self.tree_view.insert("", tk.END, values=(
+                film.get_movie_id(), film.get_poster_path(), film.get_title(), film.get_release_date()))
+
+    def clean_tree_view(self):
+        for record in self.tree_view.get_children():
+            self.tree_view.delete(record)
+
+    def on_treeview_double_click(self, event):
+        # item_id = self.tree.identify('item', event.x, event.y)
+
+        # if item_id:
+        #     # Destroy the main window and open the detail window
+        #     self.destroy()
+        #     # DetailWindow(item_id=item_id)
+
+        selected_item = self.tree_view.selection()[0]
+
+        item_values = self.tree_view.item(selected_item, "values")
+
+        movie_id = item_values[0]
+
+        try:
+            # Naviguer vers la nouvelle fenêtre
+            self.root.withdraw()
+            # FilmDetailsWindow()
+            _film_details_window = tk.Toplevel(self.root)
+            app = FilmDetailsWindow(movie_id=movie_id,
+                                    database_service=self._database_service,
+                                    film_services=self._film_services,
+                                    root=_film_details_window,
+                                    main_window_root=self.root
+                                    )
+        except Exception:
+            messagebox.showerror("ERREUR", f"UNE ERREUR S'EST PRODUITE")
+
+        # messagebox.showinfo("Success", f"FILM avec l'ID #{movie_id} selected")
+

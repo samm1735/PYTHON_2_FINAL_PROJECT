@@ -3,16 +3,15 @@ import socket
 
 def is_online():
     try:
-        # Try to establish a connection to Google's public DNS server
         socket.gethostbyname("google.com")
-        return True  # If successful, you're online
+        return True  # Online
     except OSError:
         pass
-    return False  # Otherwise, you're offline
+    return False  # Offline
 
 
-# Test the function
-if is_online():
-    print("You're online!")
-else:
-    print("You're offline.")
+# Test
+# if is_online():
+#     print("You're online!")
+# else:
+#     print("You're offline.")

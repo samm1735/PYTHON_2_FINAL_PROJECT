@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../PYTHON_2_DEVOIR_OOP/.idea/PYTHON_2_DEVOIR_OOP.iml" filepath="$PROJECT_DIR$/../PYTHON_2_DEVOIR_OOP/.idea/PYTHON_2_DEVOIR_OOP.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/PYTHON_2_FINAL_PROJECT.iml" filepath="$PROJECT_DIR$/.idea/PYTHON_2_FINAL_PROJECT.iml" />
     </modules>
   </component>

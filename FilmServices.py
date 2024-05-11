@@ -1,6 +1,8 @@
 import requests
 import json
 
+from io import BytesIO
+
 from Cast import Cast
 from Constants import Constants
 from Film import Film
@@ -14,7 +16,12 @@ class FilmServices:
         self.movie_credits_data = None
 
         self.popular_films: list[Film] = []  # À stocker dans une variable pour avoir la liste des films
-        self.get_movie_details()
+        # self.get_movie_details()
+
+    @staticmethod
+    def get_image_from_url(url: str):
+        response = requests.get(url)
+        image_data = BytesIO(response.content)
 
     @staticmethod
     def get_popular_movies_response():
@@ -93,3 +100,5 @@ class FilmServices:
                     movie_cast=movie_cast_list[:]
                 )
             )
+
+        return self.popular_films
