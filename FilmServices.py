@@ -21,7 +21,9 @@ class FilmServices:
     @staticmethod
     def get_image_from_url(url: str):
         response = requests.get(url)
+
         image_data = BytesIO(response.content)
+        return image_data
 
     @staticmethod
     def get_popular_movies_response():

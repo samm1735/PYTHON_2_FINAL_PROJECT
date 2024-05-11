@@ -7,6 +7,8 @@ from DatabaseService import DatabaseService
 from FilmServices import FilmServices
 from IsInternetConnected import is_online  # Pour tester si l'utilisateur est online ou pas
 
+from PIL import Image, ImageTk
+
 color_primary = "#cccccc"
 
 
@@ -17,6 +19,8 @@ class MainWindow:
 
         self._database_service = database_service
         self._film_services = film_services
+
+        self.photo_images = []
         #  ----------------
 
         self.root.resizable(width=False, height=False)
@@ -30,7 +34,8 @@ class MainWindow:
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        self.frame_title = ttk.Label(self.main_frame, text="Popular Movies Today", font=("Helvetica", 24, "bold"), background=color_primary)
+        self.frame_title = ttk.Label(self.main_frame, text="Popular Movies Today", font=("Helvetica", 24, "bold"),
+                                     background=color_primary)
         self.frame_title.grid(row=0, column=1, sticky="ew", pady=10)
 
         self.main_frame.grid_columnconfigure(0, weight=1)
@@ -96,8 +101,14 @@ class MainWindow:
 
         for film in self._film_services.get_movie_details():
             # poster_image = PhotoImage(file=film.get_poster_path())
+            # poster_image = PhotoImage(file=self._film_services.get_image_from_url(film.get_poster_path()))
+            # poster_image = self._film_services.get_image_from_url(film.get_poster_path())
+            # poster_image = film.get_poster_path()
+            poster_image = self._film_services.get_image_from_url(film.get_poster_path())
+            poster_image = ImageTk.PhotoImage(Image.open(poster_image))
+            self.photo_images.append(poster_image)
             self.tree_view.insert("", tk.END, values=(
-                film.get_movie_id(), film.get_poster_path(), film.get_title(), film.get_release_date()))
+                film.get_movie_id(), poster_image, film.get_title(), film.get_release_date()))
 
     def clean_tree_view(self):
         for record in self.tree_view.get_children():
@@ -132,4 +143,3 @@ class MainWindow:
             messagebox.showerror("ERREUR", f"UNE ERREUR S'EST PRODUITE")
 
         # messagebox.showinfo("Success", f"FILM avec l'ID #{movie_id} selected")
-

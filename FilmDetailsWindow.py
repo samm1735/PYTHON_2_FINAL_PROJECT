@@ -143,7 +143,6 @@ class FilmDetailsWindow:
                     individual_cast.individual_cast_character
                 )
             )
-            print(f"{individual_cast.individual_cast_original_name}||{individual_cast.individual_cast_character}")
 
     def clean_window(self):
         self.movie_title.config(text="")
