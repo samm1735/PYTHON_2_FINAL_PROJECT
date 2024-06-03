@@ -22,14 +22,24 @@ class FilmServices:
         self.popular_films: list[Film] = []  # À stocker dans une variable pour avoir la liste des films
         # self.get_movie_details()
 
+    # @staticmethod
+    # def get_image_from_url(url: str):
+    #     response = requests.get(url)
+    #
+    #     image_data = BytesIO(response.content)
+    #     return ImageTk.PhotoImage(Image.open(image_data).resize((100,100)))
+    #
+    #     # return Image.open(BytesIO(image_data))
+
     @staticmethod
-    def get_image_from_url(url: str):
+    def get_image_from_url(url: str, size: int):
         response = requests.get(url)
 
         image_data = BytesIO(response.content)
-        return ImageTk.PhotoImage(Image.open(image_data).resize((100,100)))
+        return ImageTk.PhotoImage(Image.open(image_data).resize((size, size)))
 
         # return Image.open(BytesIO(image_data))
+
 
     @staticmethod
     def get_image_from_url_2(url: str):

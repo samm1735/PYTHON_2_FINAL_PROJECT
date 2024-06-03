@@ -49,6 +49,10 @@ class MainWindow:
 
         #  ----------------
 
+        self.film_posters = []
+
+        #  ----------------
+
         self.image1 = Image.open("image_1.jpg").resize((50, 50))
         self.photo1 = ImageTk.PhotoImage(self.image1)
 
@@ -57,8 +61,9 @@ class MainWindow:
         #
         # self.image2 = Image.open(image_data).resize((50, 50))
         # self.photo2 = ImageTk.PhotoImage(self.image2)
-        the_url = "http://localhost:3000/image"
-        self.photo2 = self._film_services.get_image_from_url(the_url)
+
+        # the_url = "http://localhost:3000/image"
+        # self.photo2 = self._film_services.get_image_from_url(the_url)
 
         #  ----------------
 
@@ -84,7 +89,7 @@ class MainWindow:
         self.tree_view.column("#0", width=200, minwidth=200, stretch=tk.NO)
         # La colonne movie_id stocke l'id du film pour la navigation vers l'autre fenêtre
         self.tree_view.column("MOVIE_ID", width=0, minwidth=0, stretch=tk.NO)  # On a pas besoin de l'afficher
-        self.tree_view.column("IMAGE", width=500, minwidth=500, stretch=tk.NO)
+        self.tree_view.column("IMAGE", width=0, minwidth=0, stretch=tk.NO)
         self.tree_view.column("TITRE", width=400, minwidth=350, stretch=tk.NO)
         self.tree_view.column("DATE DE SORTIE", width=100, minwidth=80, stretch=tk.NO)
 
@@ -121,48 +126,41 @@ class MainWindow:
             # Si offline, pas d'image ou image generique
             # Testing
 
-
-
             # self.tree_view.insert("", tk.END, image=photo1, values=(
             #     film.get_movie_id(), poster_image, film.get_title(), film.get_release_date()))
             #
             # self.tree_view.image_list = [poster_image, photo1]
             #
 
-            self.tree_view.insert("", tk.END, image=self.photo2 ,values=(
-                film.get_movie_id(), film.get_poster_path(), film.get_title(), film.get_release_date()))
-        self.tree_view.image_list = [self.photo1, self.photo2]
+            movie_poster = Image.open("movie_placeholder_1.png").resize((100, 100))
+            movie_poster = ImageTk.PhotoImage(movie_poster)
 
+            self.film_posters.append(movie_poster)
+
+            self.tree_view.insert("", tk.END,  image=movie_poster, values=(
+                film.get_movie_id(), film.get_poster_path(), film.get_title(), film.get_release_date()))
+        self.tree_view.image_list = self.film_posters
 
     def populate_tree_view_if_online(self):  # If user is offline
         self.clean_tree_view()
 
         for film in self._film_services.get_movie_details():
-            # poster_image = PhotoImage(file=film.get_poster_path())
-            # poster_image = PhotoImage(file=self._film_services.get_image_from_url(film.get_poster_path()))
-            # poster_image = self._film_services.get_image_from_url(film.get_poster_path())
-            # poster_image = film.get_poster_path()
-            # poster_image = self._film_services.get_image_from_url(film.get_poster_path())
-            # poster_image = ImageTk.PhotoImage(Image.open(poster_image))
-            # raw_data = self._film_services.get_image_from_url_2(film.get_poster_path())
-            # poster_image = ImageTk.PhotoImage(image=raw_data)
-            # self.photo_images.append(poster_image)
-            # print(film.get_poster_path())
-            img = self._film_services.get_image_from_url(film.get_poster_path())
-            img.thumbnail((50,50))
-            poster_image = ImageTk.PhotoImage(img)
-
             self._database_service.insert_film(film=film)
 
             # Testing
-            image1 = Image.open("image_1.jpg").resize((20,20), Image.ANTIALIAS)
+            image1 = Image.open("image_1.jpg").resize((50, 50))
             photo1 = ImageTk.PhotoImage(image1)
 
-            self.tree_view.insert("", tk.END, image=photo1,values=(
-                film.get_movie_id(), poster_image, film.get_title(), film.get_release_date()))
+            self.film_posters.append(photo1)
 
-            self.tree_view.image_list = [poster_image, photo1]
-            # self.tree_view.im
+            photo2 = self._film_services.get_image_from_url(film.get_poster_path(), size=100)
+
+            self.film_posters.append(photo2)
+
+            self.tree_view.insert("", tk.END, image=photo2, values=(
+                film.get_movie_id(), film.get_poster_path(), film.get_title(), film.get_release_date()))
+
+            self.tree_view.image_list = self.film_posters
 
     def clean_tree_view(self):
         for record in self.tree_view.get_children():

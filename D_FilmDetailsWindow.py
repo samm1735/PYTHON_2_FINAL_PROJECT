@@ -1,9 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from tkinter import PhotoImage
-
 from PIL import Image, ImageTk
-
 from Cast import Cast
 from DatabaseService import DatabaseService
 from FilmServices import FilmServices
@@ -13,43 +11,50 @@ color_primary = "#cccccc"
 
 
 class FilmDetailsWindow:
-    def __init__(self, movie_id: int, database_service: DatabaseService, film_services: FilmServices, root,
-                 main_window_root):
+    def __init__(self, movie_id: int, database_service: DatabaseService, film_services: FilmServices, root, main_window_root):
         self.root = root
-
         self.main_window_root = main_window_root
 
         self.root.title("Popular Movies Today")
+        self.root.resizable(width=False, height=False)
+        self.root.state("zoomed")
 
         self._database_service = database_service
         self._film_services = film_services
         self.selected_movie_id = movie_id
-        #  ----------------
 
-        self.root.resizable(width=False, height=False)
-        self.root.state("zoomed")
+        # Create the Canvas and Scrollbar
+        self.canvas = tk.Canvas(self.root, bg=color_primary)
+        self.canvas.grid(row=0, column=0, sticky="nsew")
 
-        #  ----------------
+        self.scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
+        self.scrollbar.grid(row=0, column=1, sticky="ns")
 
-        self.movies_list = self._database_service.read_films()
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        #  ----------------
+        self.scrollable_frame = tk.Frame(self.canvas, bg=color_primary)
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
 
-        self.main_frame = tk.Frame(self.root, bg=color_primary)
-        self.main_frame.grid(row=0, column=0, padx=5, pady=10, sticky="nsew")
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(
+                scrollregion=self.canvas.bbox("all")
+            )
+        )
 
+        # Configure root window
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
+
+        # Create main_frame inside scrollable_frame
+        self.main_frame = tk.Frame(self.scrollable_frame, bg=color_primary)
+        self.main_frame.pack(fill="both", expand=True)
 
         self.frame_title = ttk.Label(self.main_frame, text="Popular Movies Today", font=("Helvetica", 24, "bold"),
                                      background=color_primary)
         self.frame_title.grid(row=0, column=1, sticky="ew", pady=10)
 
-        #  ----------------
-
         self.film_posters = []
-
-        #  ----------------
 
         self.main_frame.grid_columnconfigure(0, weight=1)
         self.main_frame.grid_columnconfigure(1, weight=0)
@@ -62,17 +67,13 @@ class FilmDetailsWindow:
         self.main_frame.grid_rowconfigure(4, weight=1)
         self.main_frame.grid_rowconfigure(5, weight=1)
 
-        #  ----------------
-        #       MOVIE INFORMATIONS
-        #  ----------------
-
         self.movie_title = ttk.Label(self.main_frame, text="...", font=("Helvetica", 25, "bold"))
         self.movie_title.grid(row=2, column=1, sticky="ew", padx=10, pady=1)
 
         self.prev_button = ttk.Button(self.main_frame, text="Prev", command=self.load_prev_film)
         self.prev_button.grid(row=3, column=0, sticky="nsew", padx=20)
 
-        self.movie_image = ttk.Label(self.main_frame, image=None,width=250)
+        self.movie_image = ttk.Label(self.main_frame, image=None, width=250)
         self.movie_image.grid(row=3, column=1, sticky="ew", pady=10)
 
         self.next_button = ttk.Button(self.main_frame, text="Next", command=self.load_next_film)
@@ -85,28 +86,19 @@ class FilmDetailsWindow:
                                            wraplength=500)
         self.movie_description.grid(row=5, column=1, sticky="ew", pady=20)
 
-        #  ----------------
-        #  ----------------
-
         self.movie_cast_tree_view = ttk.Treeview(self.main_frame)
         self.movie_cast_tree_view.grid(row=6, column=0, columnspan=3, sticky="nsew", padx=10, pady=5)
 
-        self.movie_cast_tree_view.config(columns=["MOVIE_ID", "ORIGINAL_NAME", "CHARACTER"], height=10)
+        self.movie_cast_tree_view.config(columns=["MOVIE_ID", "ORIGINAL_NAME", "CHARACTER"])
 
         for col in self.movie_cast_tree_view["columns"]:
             self.movie_cast_tree_view.column(column=col, anchor=tk.W, width=120, minwidth=80)
             self.movie_cast_tree_view.heading(col, text=col, anchor=tk.W)
 
         self.movie_cast_tree_view.column("#0", width=0, minwidth=0, stretch=tk.NO)
-        # La colonne movie_id stocke l'id du film pour la navigation vers l'autre fenêtre
-        self.movie_cast_tree_view.column("MOVIE_ID", width=0, minwidth=0, stretch=tk.NO)  # On a pas besoin de l'afficher
+        self.movie_cast_tree_view.column("MOVIE_ID", width=0, minwidth=0, stretch=tk.NO)
         self.movie_cast_tree_view.column("ORIGINAL_NAME", width=500, minwidth=500, stretch=tk.NO)
         self.movie_cast_tree_view.column("CHARACTER", width=400, minwidth=350, stretch=tk.NO)
-
-        # self.populate_movie_cast_tree_view()
-
-        #  ----------------
-        #  ----------------
 
         self.style = ttk.Style()
         self.style.configure(
@@ -120,22 +112,16 @@ class FilmDetailsWindow:
                                           command=self.go_back_home)
         self.get_back_button.grid(row=0, column=0, padx=10, pady=10)
 
-        #  ----------------
-
-        # Online ou offline, on prend les donnees de la db
         self.populate_window()
 
         if not is_online():
             self.network_status = ttk.Label(self.main_frame, text="Offline", foreground="red",
-                                            font=("Helvetica", 20),
-                                            background=color_primary
-                                            )
+                                            font=("Helvetica", 20), background=color_primary)
             self.network_status.grid(row=1, column=0, sticky="w")
 
         else:
             self.network_status = ttk.Label(self.main_frame, text="Online", foreground="green",
-                                            font=("Helvetica", 20)
-                                            )
+                                            font=("Helvetica", 20))
             self.network_status.grid(row=1, column=0, sticky="w")
 
     def go_back_home(self):
@@ -143,8 +129,7 @@ class FilmDetailsWindow:
         self.main_window_root.deiconify()
         self.main_window_root.state("zoomed")
 
-    def populate_window(self):  # If user is offline
-        # self.clean_window()
+    def populate_window(self):
         the_film = self._database_service.read_film_by_id(self.selected_movie_id)
 
         self.movie_title.config(text=the_film.get_title().strip(), background=color_primary)
@@ -154,32 +139,19 @@ class FilmDetailsWindow:
 
         self.movie_release_date.config(text=f" {the_film.get_release_date()} \t {genres} ")
 
-        # # Load and set the movie image
-        # image_path = the_film.get_poster_path()  # Ensure this returns a valid image path
-        # image = Image.open(image_path).resize((150, 150))
-        # photo = ImageTk.PhotoImage(image)
-        # self.movie_image.config(image=photo)
-        # self.movie_image.image = photo  # Keep a reference to avoid garbage collection
-
         if not is_online():
-            # If user is offline
             movie_poster = Image.open("movie_placeholder_2.png").resize((230, 230))
             movie_poster = ImageTk.PhotoImage(movie_poster)
-
             self.film_posters.append(movie_poster)
-
             self.movie_image.config(image=movie_poster)
         else:
-
             movie_poster = self._film_services.get_image_from_url(the_film.get_poster_path(), size=230)
-
             self.film_posters.append(movie_poster)
-
             self.movie_image.config(image=movie_poster)
 
         self.populate_movie_cast_tree_view(the_film.get_movie_cast())
 
-    def populate_movie_cast_tree_view(self, movie_cast_list: list[Cast]):  # If user is offline
+    def populate_movie_cast_tree_view(self, movie_cast_list: list[Cast]):
         self.clean_tree_view()
         for individual_cast in movie_cast_list:
             self.movie_cast_tree_view.insert(
@@ -195,57 +167,39 @@ class FilmDetailsWindow:
     def load_prev_film(self):
         try:
             new_movie_id = 0
-
-            # print(len(self.movies_list))
-
             for i in range(len(self.movies_list)):
-                # print(i)
                 if int(self.movies_list[i].get_movie_id()) == int(self.selected_movie_id):
                     new_movie_id = self.movies_list[i-1].get_movie_id()
-                    # print(f"Movie Index : {i} | Movie ID : {self.selected_movie_id} = {self.movies_list[i].get_movie_id()} --> New Movie ID : {new_movie_id} = {self.movies_list[i-1].get_movie_id()} ")
                     break
-
             self.root.withdraw()
             _film_details_window = tk.Toplevel(self.root)
             app = FilmDetailsWindow(movie_id=new_movie_id,
                                     database_service=self._database_service,
                                     film_services=self._film_services,
                                     root=_film_details_window,
-                                    main_window_root=self.root
-                                    )
-
+                                    main_window_root=self.root)
         except Exception:
-            messagebox.showerror("ERREUR", f"UNE ERREUR S'EST PRODUITE")
+            messagebox.showerror("ERREUR", "UNE ERREUR S'EST PRODUITE")
 
     def load_next_film(self):
         try:
             new_movie_id = 0
-
-            # print(len(self.movies_list))
-
             for i in range(len(self.movies_list)):
-                # print(i)
                 if int(self.movies_list[i].get_movie_id()) == int(self.selected_movie_id):
                     if i == len(self.movies_list) - 1:
-
                         new_movie_id = self.movies_list[0].get_movie_id()
                     else:
                         new_movie_id = self.movies_list[i+1].get_movie_id()
-                    # print(f"Movie Index : {i} | Movie ID : {self.selected_movie_id} = {self.movies_list[i].get_movie_id()} --> New Movie ID : {new_movie_id} = {self.movies_list[i-1].get_movie_id()} ")
                     break
-
             self.root.withdraw()
             _film_details_window = tk.Toplevel(self.root)
             app = FilmDetailsWindow(movie_id=new_movie_id,
                                     database_service=self._database_service,
                                     film_services=self._film_services,
                                     root=_film_details_window,
-                                    main_window_root=self.root
-                                    )
-
+                                    main_window_root=self.root)
         except Exception:
-            messagebox.showerror("ERREUR", f"UNE ERREUR S'EST PRODUITE")
-
+            messagebox.showerror("ERREUR", "UNE ERREUR S'EST PRODUITE")
 
     def clean_window(self):
         self.movie_title.config(text="")
