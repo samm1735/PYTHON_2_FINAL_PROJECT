@@ -3,9 +3,13 @@ import json
 
 from io import BytesIO
 
+from urllib.request import urlopen
+
 from Cast import Cast
 from Constants import Constants
 from Film import Film
+
+from PIL import Image, ImageTk
 
 
 class FilmServices:
@@ -23,7 +27,16 @@ class FilmServices:
         response = requests.get(url)
 
         image_data = BytesIO(response.content)
-        return image_data
+        return ImageTk.PhotoImage(Image.open(image_data).resize((100,100)))
+
+        # return Image.open(BytesIO(image_data))
+
+    @staticmethod
+    def get_image_from_url_2(url: str):
+        u = urlopen(url)
+        raw_data = u.read()
+        u.close()
+        return raw_data
 
     @staticmethod
     def get_popular_movies_response():

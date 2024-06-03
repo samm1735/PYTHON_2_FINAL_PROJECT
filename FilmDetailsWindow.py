@@ -127,7 +127,10 @@ class FilmDetailsWindow:
 
         self.movie_title.config(text=the_film.get_title(), background=color_primary)
         self.movie_description.config(text=the_film.get_description())
-        self.movie_release_date.config(text=the_film.get_release_date())
+
+        genres = " | ".join(the_film.get_movie_genres())
+
+        self.movie_release_date.config(text=f" {the_film.get_release_date()} \t {genres} ")
 
         self.populate_movie_cast_tree_view(the_film.get_movie_cast())
 
