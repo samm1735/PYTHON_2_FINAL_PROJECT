@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from tkinter import PhotoImage
 
 from PIL import Image, ImageTk
 
@@ -31,7 +30,10 @@ class FilmDetailsWindow:
 
         #  ----------------
 
-        self.movies_list = self._database_service.read_films()
+        if is_online():
+            self.movies_list = self._film_services.get_movie_details()
+        else:
+            self.movies_list = self._database_service.read_films()
 
         #  ----------------
 
@@ -43,7 +45,7 @@ class FilmDetailsWindow:
 
         self.frame_title = ttk.Label(self.main_frame, text="Popular Movies Today", font=("Helvetica", 24, "bold"),
                                      background=color_primary)
-        self.frame_title.grid(row=0, column=1, sticky="ew", pady=10)
+        self.frame_title.grid(row=0, column=1, sticky="ew", columnspan=3)
 
         #  ----------------
 
@@ -52,44 +54,57 @@ class FilmDetailsWindow:
         #  ----------------
 
         self.main_frame.grid_columnconfigure(0, weight=1)
-        self.main_frame.grid_columnconfigure(1, weight=0)
+        self.main_frame.grid_columnconfigure(1, weight=1)
         self.main_frame.grid_columnconfigure(2, weight=1)
-
-        self.main_frame.grid_rowconfigure(0, weight=1)
-        self.main_frame.grid_rowconfigure(1, weight=1)
-        self.main_frame.grid_rowconfigure(2, weight=1)
-        self.main_frame.grid_rowconfigure(3, weight=1)
-        self.main_frame.grid_rowconfigure(4, weight=1)
-        self.main_frame.grid_rowconfigure(5, weight=1)
 
         #  ----------------
         #       MOVIE INFORMATIONS
         #  ----------------
 
         self.movie_title = ttk.Label(self.main_frame, text="...", font=("Helvetica", 25, "bold"))
-        self.movie_title.grid(row=2, column=1, sticky="ew", padx=10, pady=1)
+        # self.movie_title.grid(row=2, column=1, sticky="ew", padx=10, pady=1)
+        self.movie_title.grid(row=2, column=1, sticky="ew")
 
-        self.prev_button = ttk.Button(self.main_frame, text="Prev", command=self.load_prev_film)
-        self.prev_button.grid(row=3, column=0, sticky="nsew", padx=20)
+        self.prev_button = ttk.Button(self.main_frame, text="Prev", command=self.load_prev_film, width=20)
+        # self.prev_button.grid(row=3, column=0, sticky="nsew", padx=20)
+        self.prev_button.grid(row=3, column=0, sticky="nsew")
 
-        self.movie_image = ttk.Label(self.main_frame, image=None,width=250)
-        self.movie_image.grid(row=3, column=1, sticky="ew", pady=10)
+        if self.selected_movie_id == self.movies_list[0].get_movie_id():
+            self.prev_button.configure(state=tk.DISABLED)
 
-        self.next_button = ttk.Button(self.main_frame, text="Next", command=self.load_next_film)
-        self.next_button.grid(row=3, column=2, sticky="nsew", padx=20)
+        self.style_label = ttk.Style()
+        self.style_label.configure(
+            "Custom.MovieImageLabel",
+            height=20
+        )
+
+        self.movie_image = tk.Label(self.main_frame, image=None, width=240, height=240)
+        # self.movie_image.grid(row=3, column=1, sticky="ew", pady=10)
+        self.movie_image.grid(row=3, column=1, sticky="nsew", padx=50)
+
+        self.next_button = ttk.Button(self.main_frame, text="Next", command=self.load_next_film, width=20)
+        # self.next_button.grid(row=3, column=2, sticky="nsew", padx=20)
+        self.next_button.grid(row=3, column=2, sticky="nsew")
 
         self.movie_release_date = ttk.Label(self.main_frame, text="...", font=("Helvetica", 12, "italic"))
-        self.movie_release_date.grid(row=4, column=1, sticky="ew", pady=1, padx=(0, 20))
+        # self.movie_release_date.grid(row=4, column=1, sticky="ew", pady=5, padx=(0, 20))
+        self.movie_release_date.grid(row=4, column=1, sticky="ew", padx=10, pady=10)
 
         self.movie_description = ttk.Label(self.main_frame, text="...", font=("Helvetica", 12, "normal"),
                                            wraplength=500)
-        self.movie_description.grid(row=5, column=1, sticky="ew", pady=20)
+        # self.movie_description.grid(row=5, column=1, sticky="ew", pady=20)
+        self.movie_description.grid(row=5, column=1, sticky="ew", pady=10)
 
         #  ----------------
         #  ----------------
 
-        self.movie_cast_tree_view = ttk.Treeview(self.main_frame)
-        self.movie_cast_tree_view.grid(row=6, column=0, columnspan=3, sticky="nsew", padx=10, pady=5)
+        self.movie_cast_title = ttk.Label(self.main_frame, text="Cast", font=("Helvetica", 20, "bold"), background=color_primary)
+        # self.movie_title.grid(row=2, column=1, sticky="ew", padx=10, pady=1)
+        self.movie_cast_title.grid(row=6, column=1, columnspan=3, sticky="nsew")
+
+        self.movie_cast_tree_view = ttk.Treeview(self.main_frame, height=5)
+
+        self.movie_cast_tree_view.grid(row=7, column=0, columnspan=3, sticky="nsew", padx=50, pady=5)
 
         self.movie_cast_tree_view.config(columns=["MOVIE_ID", "ORIGINAL_NAME", "CHARACTER"], height=10)
 
@@ -195,12 +210,11 @@ class FilmDetailsWindow:
     def load_prev_film(self):
         try:
             new_movie_id = 0
-
-            # print(len(self.movies_list))
-
             for i in range(len(self.movies_list)):
                 # print(i)
                 if int(self.movies_list[i].get_movie_id()) == int(self.selected_movie_id):
+                    if i == 0:
+                        self.prev_button.configure(state=tk.DISABLED)
                     new_movie_id = self.movies_list[i-1].get_movie_id()
                     # print(f"Movie Index : {i} | Movie ID : {self.selected_movie_id} = {self.movies_list[i].get_movie_id()} --> New Movie ID : {new_movie_id} = {self.movies_list[i-1].get_movie_id()} ")
                     break
@@ -211,7 +225,7 @@ class FilmDetailsWindow:
                                     database_service=self._database_service,
                                     film_services=self._film_services,
                                     root=_film_details_window,
-                                    main_window_root=self.root
+                                    main_window_root=self.main_window_root
                                     )
 
         except Exception:
@@ -227,7 +241,7 @@ class FilmDetailsWindow:
                 # print(i)
                 if int(self.movies_list[i].get_movie_id()) == int(self.selected_movie_id):
                     if i == len(self.movies_list) - 1:
-
+                        # On est arrive a la fin de la liste, donc on recommence
                         new_movie_id = self.movies_list[0].get_movie_id()
                     else:
                         new_movie_id = self.movies_list[i+1].get_movie_id()
@@ -240,12 +254,11 @@ class FilmDetailsWindow:
                                     database_service=self._database_service,
                                     film_services=self._film_services,
                                     root=_film_details_window,
-                                    main_window_root=self.root
+                                    main_window_root=self.main_window_root
                                     )
 
         except Exception:
             messagebox.showerror("ERREUR", f"UNE ERREUR S'EST PRODUITE")
-
 
     def clean_window(self):
         self.movie_title.config(text="")

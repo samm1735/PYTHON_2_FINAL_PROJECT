@@ -20,28 +20,3 @@ app = MainWindow(root=root, database_service=_database_service, film_services=_f
 # app = MainWindow(root=root, database_service=database_service)
 
 root.mainloop()
-
-
-# TO-DO: Change App Icon
-#        Add a generic image for offline mode in both screens
-#        Add image in second screen and have a more centered layout
-
-
-#
-# for _film in _films_list:
-#     print(_film.get_title())
-#     print(_film.get_movie_genres())
-#     print(_film.get_description())
-#
-#     print("Adding to DB")
-#     _database_service.insert_film(_film)
-#     print("Added to DB")
-#     # break
-
-
-# for _film in _films_from_db:
-#     print(_film.get_title())
-#     print(_film.get_movie_genres())
-#     print(_film.get_description())
-
-# print(len(_films_list))
